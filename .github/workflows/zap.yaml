@@ -3,7 +3,7 @@ run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
 on: [push]
 jobs:
   zap-scan-job:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4

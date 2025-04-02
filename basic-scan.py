@@ -6,59 +6,63 @@ from pprint import pprint
 from zapv2 import ZAPv2
 from alert_processor import process_alerts
 from zap_controller import ZAPController
+from dotenv import load_dotenv
+import os
 
-zap = ZAPController(zap_path="/home/arpit/Downloads/ZAP_2.16.0_Crossplatform/ZAP_2.16.0/zap.sh", port=8080)  # Update the path
-zap.start_zap()
+# Load environment variables from .env file
+load_dotenv()
 
-if zap.is_zap_running():
+# Get values from environment variables
+ZAP_PATH = os.getenv("ZAP_PATH")
+ZAP_PORT = int(os.getenv("ZAP_PORT", 8080))  # Default to 8080 if not set
+ZAP_API_KEY = os.getenv("ZAP_API_KEY")
+TARGET_URL = os.getenv("TARGET_URL")
+
+# Start ZAP
+zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
+zap_server.start_zap()
+
+if zap_server.is_zap_running():
     print("ZAP is up and running!")
 
-target = 'http://localhost:3000/'
-apikey = 'API-KEY' # Change to match the API key set in ZAP, or use None if the API key is disabled
-#
-# By default ZAP API client will connect to port 8080
-zap = ZAPv2(apikey=apikey)
-# Use the line below if ZAP is not listening on port 8080, for example, if listening on port 8090
-# zap = ZAPv2(apikey=apikey, proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
+# Initialize ZAP API client
+zap = ZAPv2(apikey=ZAP_API_KEY)
 
 # Proxy a request to the target so that ZAP has something to deal with
-print('Accessing target {}'.format(target))
-zap.urlopen(target)
-# Give the sites tree a chance to get updated
+print(f'Accessing target {TARGET_URL}')
+zap.urlopen(TARGET_URL)
+time.sleep(2)  # Give the sites tree a chance to update
+
+print(f'Spidering target {TARGET_URL}')
+scanid = zap.spider.scan(TARGET_URL)
 time.sleep(2)
 
-print('Spidering target {}'.format(target))
-scanid = zap.spider.scan(target)
-# Give the Spider a chance to start
-time.sleep(2)
-while (int(zap.spider.status(scanid)) < 100):
-    # Loop until the spider has finished
-    print('Spider progress %: {}'.format(zap.spider.status(scanid)))
+while int(zap.spider.status(scanid)) < 100:
+    print(f'Spider progress %: {zap.spider.status(scanid)}')
     time.sleep(2)
 
-print ('Spider completed')
+print('Spider completed')
 
-while (int(zap.pscan.records_to_scan) > 0):
-      print ('Records to passive scan : {}'.format(zap.pscan.records_to_scan))
-      time.sleep(2)
+while int(zap.pscan.records_to_scan) > 0:
+    print(f'Records to passive scan: {zap.pscan.records_to_scan}')
+    time.sleep(2)
 
-print ('Passive Scan completed')
+print('Passive Scan completed')
 
-print ('Active Scanning target {}'.format(target))
-scanid = zap.ascan.scan(target)
-while (int(zap.ascan.status(scanid)) < 100):
-    # Loop until the scanner has finished
-    print ('Scan progress %: {}'.format(zap.ascan.status(scanid)))
+print(f'Active Scanning target {TARGET_URL}')
+scanid = zap.ascan.scan(TARGET_URL)
+
+while int(zap.ascan.status(scanid)) < 100:
+    print(f'Scan progress %: {zap.ascan.status(scanid)}')
     time.sleep(5)
 
-print ('Active Scan completed')
+print('Active Scan completed')
 
 # Report the results
-
-print ('Hosts: {}'.format(', '.join(zap.core.hosts)))
-print ('Alerts: ')
-# pprint (zap.core.alerts())
+print('Hosts:', ', '.join(zap.core.hosts))
+print('Alerts:')
 
 process_alerts(zap.core.alerts())
 
-zap.stop_zap()
+# Stop ZAP
+zap_server.stop_zap()

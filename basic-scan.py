@@ -4,8 +4,16 @@
 import time
 from pprint import pprint
 from zapv2 import ZAPv2
+from alert_processor import process_alerts
+from zap_controller import ZAPController
 
-target = 'https://www.hackthissite.org/'
+zap = ZAPController(zap_path="/home/arpit/Downloads/ZAP_2.16.0_Crossplatform/ZAP_2.16.0/zap.sh", port=8080)  # Update the path
+zap.start_zap()
+
+if zap.is_zap_running():
+    print("ZAP is up and running!")
+
+target = 'http://localhost:3000/'
 apikey = 'API-KEY' # Change to match the API key set in ZAP, or use None if the API key is disabled
 #
 # By default ZAP API client will connect to port 8080
@@ -49,4 +57,8 @@ print ('Active Scan completed')
 
 print ('Hosts: {}'.format(', '.join(zap.core.hosts)))
 print ('Alerts: ')
-pprint (zap.core.alerts())
+# pprint (zap.core.alerts())
+
+process_alerts(zap.core.alerts())
+
+zap.stop_zap()

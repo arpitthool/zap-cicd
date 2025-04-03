@@ -37,10 +37,10 @@ jobs:
         shell: bash
 
       - name: Run ZAP Security Scan
-        run: python basic-scan.py
+        run: python3 basic-scan.py
         env:
           ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
-          ZAP_PATH: ${{ secrets.ZAP_PATH }}
+          ZAP_PATH: "./ZAP/zap.sh"
           ZAP_PORT: ${{ secrets.ZAP_PORT }}
           TARGET_URL: ${{ secrets.TARGET_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -20,7 +20,7 @@ TARGET_URL = os.getenv("TARGET_URL")
 
 # Start ZAP
 zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
-zap_server.start_zap()
+# zap_server.start_zap()
 
 if zap_server.is_zap_running():
     print("ZAP is up and running!")
@@ -65,4 +65,4 @@ print('Alerts:')
 process_alerts(zap.core.alerts())
 
 # Stop ZAP
-zap_server.stop_zap()
+# zap_server.stop_zap()

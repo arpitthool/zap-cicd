@@ -1,58 +1,61 @@
-# alert_processor.py
-import os
 import openai
+import os
 import json
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
-# Load API key from environment variable
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable not set!")
+client = openai.OpenAI(api_key=OPENAI_API_KEY)  # Use OpenAI's new client interface
 
-def summarize_alert(alert):
-    """Sends a full alert to ChatGPT and returns a summary."""
-    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# Limit the number of alerts to process
+ALERT_LIMIT = 5  # Change this value as needed
 
-    alert_json = json.dumps(alert, indent=2)  # Convert the alert dictionary to JSON format for better readability
-
-    prompt = f"""
-    You are a security analyst. Summarize the following security alert in simple terms:
-    
-    {alert_json}
-    
-    Provide a concise explanation of the issue and a recommended solution.
-    """
-
+def get_summary(alert):
+    """Send an alert to ChatGPT for summarization."""
     response = client.chat.completions.create(
         model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+        messages=[
+            {"role": "system", "content": "You are a cybersecurity expert. Summarize the following security alert."},
+            {"role": "user", "content": json.dumps(alert, indent=2)}
+        ],
+        temperature=0.5
     )
+    return response.choices[0].message.content
 
-    return response.choices[0].message.content.strip()
+def generate_final_summary(alert_summaries):
+    """Send the list of summaries to ChatGPT for an overall security report."""
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a security engineer. Analyze the provided security scan summaries and generate a high-level security report."},
+            {"role": "user", "content": f"Here are the individual summaries:\n\n{json.dumps(alert_summaries, indent=2)}"}
+        ],
+        temperature=0.5
+    )
+    return response.choices[0].message.content
 
-def process_alerts(alerts, output_file="zap_alerts_summary.txt"):
-    """Processes alerts, summarizes them using ChatGPT, and stores the results in a file."""
-    if not alerts:
-        print("No alerts found.")
-        return
+def process_alerts(alerts):
+    """Process alerts: summarize each and generate a final report."""
+    alert_summaries = []
 
-    with open(output_file, "w", encoding="utf-8") as file:
-        for i, alert in enumerate(alerts, start=1):
-            summary = summarize_alert(alert)
+    # Limit the number of alerts processed
+    for i, alert in enumerate(alerts[:ALERT_LIMIT]):  
+        print(f"Processing alert {i+1}/{ALERT_LIMIT}...")
+        summary = get_summary(alert)
+        alert_summaries.append({"alert": alert, "summary": summary})
 
-            alert_info = (
-                f"\nAlert {i}:\n"
-                f"Full Alert Data:\n{json.dumps(alert, indent=2)}\n\n"
-                f"Summary: {summary}\n"
-                "------------------------------------------\n"
-            )
+    final_summary = generate_final_summary([item["summary"] for item in alert_summaries])
 
-            print(alert_info)  # Print to console
-            file.write(alert_info)  # Save to file
+    # Store results in a file
+    with open("security_report.txt", "w") as f:
+        f.write("=== Individual Alert Summaries ===\n")
+        for i, item in enumerate(alert_summaries, 1):
+            f.write(f"\nAlert {i}:\n{json.dumps(item['alert'], indent=2)}\n")
+            f.write(f"Summary:\n{item['summary']}\n")
+        f.write("\n=== Final Security Report ===\n")
+        f.write(final_summary)
 
-    print(f"Alerts and summaries saved to {output_file}")
+    print("Security report generated: security_report.txt")

@@ -42,8 +42,8 @@ jobs:
       # - name: debug
       #   run: ls /home/arpit/Downloads/ZAP_2.16.0_Crossplatform/
 
-      - name: Terminate existing ZAP server (if any)
-        run: pkill -f zap
+      # - name: Terminate existing ZAP server (if any)
+      #   run: pkill -f zap
 
 
       # - name: Load environment variables

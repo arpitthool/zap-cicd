@@ -1,2 +1,5 @@
-# .env
+.env
 __pycache__/
+.idea/
+security_report.txt
+zap_alerts_summary.txt

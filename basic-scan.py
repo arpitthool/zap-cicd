@@ -49,14 +49,14 @@ while int(zap.pscan.records_to_scan) > 0:
 
 print('Passive Scan completed')
 
-print(f'Active Scanning target {TARGET_URL}')
-scanid = zap.ascan.scan(TARGET_URL)
+# print(f'Active Scanning target {TARGET_URL}')
+# scanid = zap.ascan.scan(TARGET_URL)
 
-while int(zap.ascan.status(scanid)) < 100:
-    print(f'Scan progress %: {zap.ascan.status(scanid)}')
-    time.sleep(5)
+# while int(zap.ascan.status(scanid)) < 100:
+#     print(f'Scan progress %: {zap.ascan.status(scanid)}')
+#     time.sleep(5)
 
-print('Active Scan completed')
+# print('Active Scan completed')
 
 # Report the results
 print('Hosts:', ', '.join(zap.core.hosts))

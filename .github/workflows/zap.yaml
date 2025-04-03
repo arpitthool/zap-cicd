@@ -1,14 +1,46 @@
 name: ZAP Scan
 run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
 on: [push]
-jobs:
-  zap-scan-job:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
+
+# on:
+#   pull_request:
+#     branches:
+#       - main  # Change this if your default branch is different
+# jobs:
+#   zap-scan-job:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository code
+#         uses: actions/checkout@v4
         
-      - name: ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.12.0
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          target: 'https://www.zaproxy.org/'
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Load environment variables
+        run: |
+          if [ -f .env ]; then
+            export $(grep -v '^#' .env | xargs)
+          fi
+        shell: bash
+
+      - name: Run ZAP Security Scan
+        run: python basic-scan.py
+        env:
+          ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
+          ZAP_PATH: ${{ secrets.ZAP_PATH }}
+          ZAP_PORT: ${{ secrets.ZAP_PORT }}
+          TARGET_URL: ${{ secrets.TARGET_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

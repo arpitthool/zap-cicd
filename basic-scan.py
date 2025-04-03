@@ -16,17 +16,20 @@ load_dotenv()
 ZAP_PATH = os.getenv("ZAP_PATH")
 ZAP_PORT = int(os.getenv("ZAP_PORT", 8080))  # Default to 8080 if not set
 ZAP_API_KEY = os.getenv("ZAP_API_KEY")
+ZAP_HOST = os.getenv("ZAP_HOST", "http://localhost")  # Default to localhost if not set
 TARGET_URL = os.getenv("TARGET_URL")
 
 # Start ZAP
-zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
-# zap_server.start_zap()
+# zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
+# # zap_server.start_zap()
 
-if zap_server.is_zap_running():
-    print("ZAP is up and running!")
+# if zap_server.is_zap_running():
+#     print("ZAP is up and running!")
 
 # Initialize ZAP API client
-zap = ZAPv2(apikey=ZAP_API_KEY)
+# zap = ZAPv2(apikey=ZAP_API_KEY)
+zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
+
 
 # Proxy a request to the target so that ZAP has something to deal with
 print(f'Accessing target {TARGET_URL}')

@@ -29,11 +29,18 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: debug
-        run: pwd
+      - name: Download and Install ZAP
+        run: |
+          wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
+          tar -xzf ZAP_2.16.0_Linux.tar.gz
+          chmod +x ZAP_2.16.0/zap.sh
+        shell: bash
 
-      - name: debug
-        run: ls /home/arpit/Downloads/ZAP_2.16.0_Crossplatform/
+      # - name: debug
+      #   run: pwd
+
+      # - name: debug
+      #   run: ls /home/arpit/Downloads/ZAP_2.16.0_Crossplatform/
 
       - name: Terminate existing ZAP server (if any)
         run: pkill -f zap

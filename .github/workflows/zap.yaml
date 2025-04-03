@@ -29,18 +29,28 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Load environment variables
-        run: |
-          if [ -f .env ]; then
-            export $(grep -v '^#' .env | xargs)
-          fi
-        shell: bash
+      - name: debug
+        run: pwd
+
+      - name: debug
+        run: ls /home/arpit/Downloads/ZAP_2.16.0_Crossplatform/
+
+      - name: Terminate existing ZAP server (if any)
+        run: pkill -f zap
+
+
+      # - name: Load environment variables
+      #   run: |
+      #     if [ -f .env ]; then
+      #       export $(grep -v '^#' .env | xargs)
+      #     fi
+      #   shell: bash
 
       - name: Run ZAP Security Scan
         run: python3 basic-scan.py
-        env:
-          ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
-          ZAP_PATH: "./ZAP/zap.sh"
-          ZAP_PORT: ${{ secrets.ZAP_PORT }}
-          TARGET_URL: ${{ secrets.TARGET_URL }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      #   env:
+      #     ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
+      #     ZAP_PATH: ${{ secrets.ZAP_PATH }}
+      #     ZAP_PORT: ${{ secrets.ZAP_PORT }}
+      #     TARGET_URL: ${{ secrets.TARGET_URL }}
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

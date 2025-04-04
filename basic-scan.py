@@ -22,60 +22,61 @@ TARGET_URL = os.getenv("TARGET_URL")
 GITHUB_REPO = os.getenv("GITHUB_REPO")  # Format: "owner/repo"
 
 # Start ZAP
-zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
-zap_server.start_zap()
+# zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
+# zap_server.start_zap()
 
-if zap_server.is_zap_running():
-    print("ZAP is up and running!")
+# if zap_server.is_zap_running():
+#     print("ZAP is up and running!")
 
-# Initialize ZAP API client
-# zap = ZAPv2(apikey=ZAP_API_KEY)
-zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
+# # Initialize ZAP API client
+# # zap = ZAPv2(apikey=ZAP_API_KEY)
+# zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
 
 
-# Proxy a request to the target so that ZAP has something to deal with
-print(f'Accessing target {TARGET_URL}')
-zap.urlopen(TARGET_URL)
-time.sleep(2)  # Give the sites tree a chance to update
+# # Proxy a request to the target so that ZAP has something to deal with
+# print(f'Accessing target {TARGET_URL}')
+# zap.urlopen(TARGET_URL)
+# time.sleep(2)  # Give the sites tree a chance to update
 
-print(f'Spidering target {TARGET_URL}')
-scanid = zap.spider.scan(TARGET_URL)
-time.sleep(2)
+# print(f'Spidering target {TARGET_URL}')
+# scanid = zap.spider.scan(TARGET_URL)
+# time.sleep(2)
 
-while int(zap.spider.status(scanid)) < 100:
-    print(f'Spider progress %: {zap.spider.status(scanid)}')
-    time.sleep(2)
+# while int(zap.spider.status(scanid)) < 100:
+#     print(f'Spider progress %: {zap.spider.status(scanid)}')
+#     time.sleep(2)
 
-print('Spider completed')
+# print('Spider completed')
 
-while int(zap.pscan.records_to_scan) > 0:
-    print(f'Records to passive scan: {zap.pscan.records_to_scan}')
-    time.sleep(2)
+# while int(zap.pscan.records_to_scan) > 0:
+#     print(f'Records to passive scan: {zap.pscan.records_to_scan}')
+#     time.sleep(2)
 
-print('Passive Scan completed')
+# print('Passive Scan completed')
 
-# print(f'Active Scanning target {TARGET_URL}')
-# scanid = zap.ascan.scan(TARGET_URL)
+# # print(f'Active Scanning target {TARGET_URL}')
+# # scanid = zap.ascan.scan(TARGET_URL)
 
-# while int(zap.ascan.status(scanid)) < 100:
-#     print(f'Scan progress %: {zap.ascan.status(scanid)}')
-#     time.sleep(5)
+# # while int(zap.ascan.status(scanid)) < 100:
+# #     print(f'Scan progress %: {zap.ascan.status(scanid)}')
+# #     time.sleep(5)
 
-# print('Active Scan completed')
+# # print('Active Scan completed')
 
-# Report the results
-print('Hosts:', ', '.join(zap.core.hosts))
-print('Alerts:')
+# # Report the results
+# print('Hosts:', ', '.join(zap.core.hosts))
+# print('Alerts:')
 
-process_alerts(zap.core.alerts())
+# process_alerts(zap.core.alerts())
 
 # post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n")
 
 # Post the summary as a comment
 
-artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
-post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n<FINAL SUMMARY HERE>\n```\n📂 **[Download Full Report]({artifact_link})**")
+# artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
+# post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n<FINAL SUMMARY HERE>\n```\n📂 **[Download Full Report]({artifact_link})**")
 # post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
+post_pr_comment("Hello! from Github Bot")
 
 # Stop ZAP
-zap_server.stop_zap()
+# zap_server.stop_zap()

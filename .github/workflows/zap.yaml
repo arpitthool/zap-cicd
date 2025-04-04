@@ -1,7 +1,12 @@
-
-name: ZAP Scan
+name: ZAP Scan (PR)
 run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
-on: [push]
+
+# Trigger this workflow when a pull request is opened or updated with new commits
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize]  # opened = new PR; synchronize = push to existing PR
         
 jobs:
   zap_scan:
@@ -10,6 +15,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Create a place holder report file. Replace this with your actual scan output.
+      - name: Create a sample file
+        run: echo "This is a test file." > security_report.txt
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,3 +37,12 @@ jobs:
           TARGET_URL: http://localhost:3000/
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ZAP_HOST: http://localhost
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security_report.txt

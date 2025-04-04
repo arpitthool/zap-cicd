@@ -1,10 +1,12 @@
-name: ZAP Scan
+name: ZAP Scan (PR)
 run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
 
+# Trigger this workflow when a pull request is opened or updated with new commits
 on:
   pull_request:
     branches:
       - main
+    types: [opened, synchronize]  # opened = new PR; synchronize = push to existing PR
         
 jobs:
   zap_scan:
@@ -13,6 +15,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Create a place holder report file. Replace this with your actual scan output.
+      - name: Create a sample file
+        run: echo "This is a test file." > security_report.txt
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -37,3 +43,16 @@ jobs:
         with:
           name: security-report
           path: security_report.txt
+
+      # Post a comment on the PR with a link to the artifact
+      - name: Comment on the PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # GitHub provides this token automatically for the workflow
+          issue-number: ${{ github.event.pull_request.number }}  # Gets the current PR number dynamically
+          body: |
+            👋 Hello! Here's the security scan report.
+
+            ✅ You can [download the full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) from the "Artifacts" section of this workflow run.
+
+            📄 This helps reviewers quickly access the scan results and take action if needed.

@@ -8,6 +8,7 @@ from alert_processor import process_alerts
 from zap_controller import ZAPController
 from dotenv import load_dotenv
 import os
+from github import post_pr_comment
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -18,6 +19,7 @@ ZAP_PORT = int(os.getenv("ZAP_PORT", 8080))  # Default to 8080 if not set
 ZAP_API_KEY = os.getenv("ZAP_API_KEY")
 ZAP_HOST = os.getenv("ZAP_HOST", "http://localhost")  # Default to localhost if not set
 TARGET_URL = os.getenv("TARGET_URL")
+GITHUB_REPO = os.getenv("GITHUB_REPO")  # Format: "owner/repo"
 
 # Start ZAP
 zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
@@ -66,6 +68,14 @@ print('Hosts:', ', '.join(zap.core.hosts))
 print('Alerts:')
 
 process_alerts(zap.core.alerts())
+
+# post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n")
+
+# Post the summary as a comment
+
+artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
+post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n<FINAL SUMMARY HERE>\n```\n📂 **[Download Full Report]({artifact_link})**")
+# post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
 
 # Stop ZAP
 zap_server.stop_zap()

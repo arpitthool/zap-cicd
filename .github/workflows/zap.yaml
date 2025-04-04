@@ -1,3 +1,4 @@
+
 name: ZAP Scan
 run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
 on: [push]

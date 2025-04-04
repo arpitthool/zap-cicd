@@ -37,7 +37,7 @@ jobs:
           TARGET_URL: http://localhost:3000/
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ZAP_HOST: http://localhost
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
 

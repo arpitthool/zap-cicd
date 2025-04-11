@@ -2,7 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 
 # Load GitHub API token from environment variable
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")

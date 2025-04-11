@@ -13,15 +13,19 @@ jobs:
     runs-on: self-hosted
 
     steps:
+
+      - name: Create Docker network
+        run: docker network create zapnet
+
       - name: Start web app using docker
         run: |
-          docker run -d --name juice-shop -p 127.0.0.1:3000:3000 bkimminich/juice-shop
+          docker run -d --name juice-shop --network zapnet -p 127.0.0.1:3000:3000 bkimminich/juice-shop
           echo "Waiting for Juice Shop..."
           until curl -sSf http://localhost:3000; do sleep 5; done
 
       - name: Start ZAP server
         run: |
-          docker run -d --name zap \
+          docker run -d --name zap --network zapnet \
             -p 8090:8090 \
             zaproxy/zap-stable \
             zap.sh -daemon -port 8090 -host 0.0.0.0 \
@@ -55,7 +59,8 @@ jobs:
           ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
           ZAP_PATH: ${{ secrets.ZAP_PATH }}
           ZAP_PORT: 8090
-          TARGET_URL: http://localhost:3000/
+          # TARGET_URL: http://localhost:3000/
+          TARGET_URL: http://juice-shop:3000
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ZAP_HOST: http://localhost
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
@@ -75,3 +80,7 @@ jobs:
       - name: Stop ZAP
         if: always()
         run: docker rm -f zap
+
+      - name: Remove Docker network
+        if: always()
+        run: docker network rm zapnet

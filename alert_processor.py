@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from collections import Counter
 
 # Load environment variables (optional if you're using GitHub Actions secrets)
-# load_dotenv()
+load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)

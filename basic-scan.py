@@ -11,11 +11,11 @@ import os
 from github import post_pr_comment
 
 # Load environment variables from .env file
-# load_dotenv()
+load_dotenv()
 
 # Get values from environment variables
 ZAP_PATH = os.getenv("ZAP_PATH")
-ZAP_PORT = int(os.getenv("ZAP_PORT", 8080))  # Default to 8080 if not set
+ZAP_PORT = int(os.getenv("ZAP_PORT", 8090))
 ZAP_API_KEY = os.getenv("ZAP_API_KEY")
 ZAP_HOST = os.getenv("ZAP_HOST", "http://localhost")  # Default to localhost if not set
 TARGET_URL = os.getenv("TARGET_URL")

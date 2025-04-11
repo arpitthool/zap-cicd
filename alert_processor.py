@@ -39,39 +39,37 @@ def get_summary(alert):
     return response.choices[0].message.content
 
 def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
-    """Send summaries + context to ChatGPT for a high-level security report."""
-
+    """Generate a contextual intro manually and append ChatGPT's high-level report."""
+    
     total_alerts = len(all_alerts)
+    risk_counts = Counter(alert.get("risk", "Unknown").capitalize() for alert in all_alerts)
+    summarized_levels = sorted(set(alert.get("risk", "Unknown").capitalize() for alert in summarized_alerts))
 
-    # Count all risk levels
-    all_risks = [alert.get("risk", "Unknown").capitalize() for alert in all_alerts]
-    risk_counts = Counter(all_risks)
-
-    # Extract summarized levels
-    summarized_risks = set(alert.get("risk", "Unknown").capitalize() for alert in summarized_alerts)
-
-    # Compose context block
-    context = (
+    # Build the manually written stats summary
+    stats_intro = (
         f"Security scan detected **{total_alerts}** total alerts.\n\n"
         f"📊 **Risk Level Breakdown:**\n" +
-        "".join(f"- {risk}: {count}\n" for risk, count in risk_counts.items()) + "\n" +
-        f"✅ **Alerts summarized in this report**: {', '.join(sorted(summarized_risks)) or 'None'}.\n\n"
-        "Please review the summaries below and generate a high-level report with urgent issues and recommendations."
+        "".join(f"- {level}: {count}\n" for level, count in risk_counts.items()) + "\n" +
+        f"✅ **Alerts summarized in this report**: {', '.join(summarized_levels) or 'None'}.\n\n"
     )
 
+    # Combine all summaries into one string
     summaries_text = "\n\n".join(item["summary"] for item in alert_summaries)
 
-    # Send full prompt to ChatGPT
+    # Ask GPT to analyze only the summaries
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a security engineer reviewing a ZAP vulnerability scan."},
-            {"role": "user", "content": f"{context}\n\n=== Summaries Start ===\n\n{summaries_text}"}
+            {"role": "system", "content": "You are a security engineer. Analyze the provided summaries and generate a high-level report with urgent issues and recommendations."},
+            {"role": "user", "content": summaries_text}
         ],
         temperature=0.5
     )
 
-    return response.choices[0].message.content
+    gpt_report = response.choices[0].message.content
+
+    # Return combined full report
+    return stats_intro + gpt_report
 
 def process_alerts(alerts):
     """Process alerts: filter based on config, summarize, and generate a report."""

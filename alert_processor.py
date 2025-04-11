@@ -14,7 +14,7 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 ALERT_LIMIT = 5  # Adjust as needed
 
 # Load filtering preferences from YAML config
-CONFIG_PATH = "config.yml"
+CONFIG_PATH = "config.yaml"
 if os.path.exists(CONFIG_PATH):
     with open(CONFIG_PATH, "r") as config_file:
         config = yaml.safe_load(config_file)

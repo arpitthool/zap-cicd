@@ -5,7 +5,6 @@ import time
 from pprint import pprint
 from zapv2 import ZAPv2
 from alert_processor import process_alerts
-from zap_controller import ZAPController
 from dotenv import load_dotenv
 import os
 from github import post_pr_comment
@@ -20,13 +19,6 @@ ZAP_API_KEY = os.getenv("ZAP_API_KEY")
 ZAP_HOST = os.getenv("ZAP_HOST", "http://localhost")  # Default to localhost if not set
 TARGET_URL = os.getenv("TARGET_URL")
 GITHUB_REPO = os.getenv("GITHUB_REPO")  # Format: "owner/repo"
-
-# Start ZAP
-# zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
-# zap_server.start_zap()
-
-# if zap_server.is_zap_running():
-#     print("ZAP is up and running!")
 
 # Initialize ZAP API client
 zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
@@ -67,6 +59,3 @@ final_summary = process_alerts(zap.core.alerts())
 # Post the summary as a PR comment
 artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
 post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
-
-# Stop ZAP
-# zap_server.stop_zap()

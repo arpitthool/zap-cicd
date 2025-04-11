@@ -11,7 +11,7 @@ import os
 from github import post_pr_comment
 
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv()
 
 # Get values from environment variables
 ZAP_PATH = os.getenv("ZAP_PATH")
@@ -61,9 +61,6 @@ print('Passive Scan completed')
 
 # print('Active Scan completed')
 
-# Stop ZAP
-zap_server.stop_zap()
-
 process_alerts(zap.core.alerts())
 
 final_summary = ""
@@ -71,3 +68,6 @@ final_summary = ""
 # Post the summary as a PR comment
 artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
 post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
+
+# Stop ZAP
+zap_server.stop_zap()

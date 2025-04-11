@@ -59,5 +59,3 @@ def process_alerts(alerts):
         f.write(final_summary)
 
     print("Security report generated: security_report.txt")
-
-    return final_summary

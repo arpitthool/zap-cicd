@@ -13,7 +13,6 @@ from github import post_pr_comment
 load_dotenv()
 
 # Get values from environment variables
-ZAP_PATH = os.getenv("ZAP_PATH")
 ZAP_PORT = int(os.getenv("ZAP_PORT", 8090))
 ZAP_API_KEY = os.getenv("ZAP_API_KEY")
 ZAP_HOST = os.getenv("ZAP_HOST", "http://localhost")  # Default to localhost if not set

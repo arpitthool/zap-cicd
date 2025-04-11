@@ -19,6 +19,21 @@ jobs:
           echo "Waiting for Juice Shop..."
           until curl -sSf http://localhost:3000; do sleep 5; done
 
+      - name: Start ZAP server
+        run: |
+          docker run -d --name zap \
+            -p 8090:8090 \
+            zaproxy/zap-stable \
+            zap.sh -daemon -port 8090 -host 0.0.0.0 \
+              -config api.addrs.addr.name=.* \
+              -config api.addrs.addr.regex=true \
+              -config api.key=${{ secrets.ZAP_API_KEY }}
+
+      - name: Wait for ZAP to start
+        run: |
+          echo "Waiting for ZAP..."
+          until curl -s http://localhost:8090; do sleep 5; done
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -56,3 +71,7 @@ jobs:
       - name: Terminate web app
         if: always()
         run: docker rm -f juice-shop
+
+      - name: Stop ZAP
+        if: always()
+        run: docker rm -f zap

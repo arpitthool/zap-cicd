@@ -22,11 +22,11 @@ TARGET_URL = os.getenv("TARGET_URL")
 GITHUB_REPO = os.getenv("GITHUB_REPO")  # Format: "owner/repo"
 
 # Start ZAP
-zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
-zap_server.start_zap()
+# zap_server = ZAPController(zap_path=ZAP_PATH, port=ZAP_PORT)
+# zap_server.start_zap()
 
-if zap_server.is_zap_running():
-    print("ZAP is up and running!")
+# if zap_server.is_zap_running():
+#     print("ZAP is up and running!")
 
 # Initialize ZAP API client
 zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
@@ -69,4 +69,4 @@ artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITH
 post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
 
 # Stop ZAP
-zap_server.stop_zap()
+# zap_server.stop_zap()

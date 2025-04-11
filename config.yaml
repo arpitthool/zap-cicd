@@ -1,0 +1,7 @@
+summarize_levels:
+  - High
+  - Medium
+
+ignore_levels:
+  - Informational
+  - Low

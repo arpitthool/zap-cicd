@@ -1,17 +1,29 @@
 import openai
 import os
 import json
+import yaml
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables (optional if you're using GitHub Actions secrets)
 # load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)  # Use OpenAI's new client interface
+# Limit the number of alerts to summarize
+ALERT_LIMIT = 5  # Adjust as needed
 
-# Limit the number of alerts to process
-ALERT_LIMIT = 5  # Change this value as needed
+# Load filtering preferences from YAML config
+CONFIG_PATH = "config.yml"
+if os.path.exists(CONFIG_PATH):
+    with open(CONFIG_PATH, "r") as config_file:
+        config = yaml.safe_load(config_file)
+else:
+    raise FileNotFoundError("Missing config.yml file in project directory.")
+
+# Get levels from config (normalize to lowercase for comparison)
+summarize_levels = set(level.lower() for level in config.get("summarize_levels", []))
+ignore_levels = set(level.lower() for level in config.get("ignore_levels", []))
 
 def get_summary(alert):
     """Send an alert to ChatGPT for summarization."""
@@ -38,14 +50,24 @@ def generate_final_summary(alert_summaries):
     return response.choices[0].message.content
 
 def process_alerts(alerts):
-    """Process alerts: summarize each and generate a final report."""
+    """Process alerts: filter based on config, summarize, and generate a report."""
     alert_summaries = []
 
-    # Limit the number of alerts processed
-    for i, alert in enumerate(alerts[:ALERT_LIMIT]):  
-        print(f"Processing alert {i+1}/{ALERT_LIMIT}...")
+    # Filter alerts based on risk levels from config
+    filtered_alerts = [
+        alert for alert in alerts
+        if (risk := alert.get("risk", "").lower()) in summarize_levels and risk not in ignore_levels
+    ]
+
+    print(f"✅ Found {len(filtered_alerts)} alert(s) after filtering.")
+    for i, alert in enumerate(filtered_alerts[:ALERT_LIMIT]):
+        print(f"→ Summarizing alert {i+1}/{min(ALERT_LIMIT, len(filtered_alerts))} ({alert.get('risk')}): {alert.get('name')}")
         summary = get_summary(alert)
         alert_summaries.append({"alert": alert, "summary": summary})
+
+    if not alert_summaries:
+        print("⚠️ No alerts to summarize based on config.")
+        return "No alerts to summarize based on the configured risk levels."
 
     final_summary = generate_final_summary([item["summary"] for item in alert_summaries])
 
@@ -58,6 +80,5 @@ def process_alerts(alerts):
         f.write("\n=== Final Security Report ===\n")
         f.write(final_summary)
 
-    print("Security report generated: security_report.txt")
-
+    print("📄 Security report saved as: security_report.txt")
     return final_summary

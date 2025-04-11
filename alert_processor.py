@@ -3,6 +3,7 @@ import os
 import json
 import yaml
 from dotenv import load_dotenv
+from collections import Counter
 
 # Load environment variables (optional if you're using GitHub Actions secrets)
 # load_dotenv()
@@ -37,16 +38,39 @@ def get_summary(alert):
     )
     return response.choices[0].message.content
 
-def generate_final_summary(alert_summaries):
-    """Send the list of summaries to ChatGPT for an overall security report."""
+def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
+    """Send summaries + context to ChatGPT for a high-level security report."""
+
+    total_alerts = len(all_alerts)
+
+    # Count all risk levels
+    all_risks = [alert.get("risk", "Unknown").capitalize() for alert in all_alerts]
+    risk_counts = Counter(all_risks)
+
+    # Extract summarized levels
+    summarized_risks = set(alert.get("risk", "Unknown").capitalize() for alert in summarized_alerts)
+
+    # Compose context block
+    context = (
+        f"Security scan detected **{total_alerts}** total alerts.\n\n"
+        f"📊 **Risk Level Breakdown:**\n" +
+        "".join(f"- {risk}: {count}\n" for risk, count in risk_counts.items()) + "\n" +
+        f"✅ **Alerts summarized in this report**: {', '.join(sorted(summarized_risks)) or 'None'}.\n\n"
+        "Please review the summaries below and generate a high-level report with urgent issues and recommendations."
+    )
+
+    summaries_text = "\n\n".join(item["summary"] for item in alert_summaries)
+
+    # Send full prompt to ChatGPT
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "You are a security engineer. Analyze the provided security scan summaries and generate a high-level security report."},
-            {"role": "user", "content": f"Here are the individual summaries:\n\n{json.dumps(alert_summaries, indent=2)}"}
+            {"role": "system", "content": "You are a security engineer reviewing a ZAP vulnerability scan."},
+            {"role": "user", "content": f"{context}\n\n=== Summaries Start ===\n\n{summaries_text}"}
         ],
         temperature=0.5
     )
+
     return response.choices[0].message.content
 
 def process_alerts(alerts):
@@ -69,7 +93,11 @@ def process_alerts(alerts):
         print("⚠️ No alerts to summarize based on config.")
         return "No alerts to summarize based on the configured risk levels."
 
-    final_summary = generate_final_summary([item["summary"] for item in alert_summaries])
+    final_summary = generate_final_summary(
+        alert_summaries=alert_summaries,
+        all_alerts=alerts,
+        summarized_alerts=[item["alert"] for item in alert_summaries]
+    )
 
     # Store results in a file
     with open("security_report.txt", "w") as f:

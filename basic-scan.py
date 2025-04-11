@@ -61,9 +61,8 @@ print('Passive Scan completed')
 
 # print('Active Scan completed')
 
-process_alerts(zap.core.alerts())
-
-final_summary = ""
+# process alerts and create summaries
+final_summary = process_alerts(zap.core.alerts())
 
 # Post the summary as a PR comment
 artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"

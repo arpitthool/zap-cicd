@@ -54,7 +54,7 @@ jobs:
         env:
           ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
           ZAP_PATH: ${{ secrets.ZAP_PATH }}
-          ZAP_PORT: 8080
+          ZAP_PORT: 8090
           TARGET_URL: http://localhost:3000/
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ZAP_HOST: http://localhost

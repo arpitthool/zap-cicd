@@ -29,9 +29,7 @@ if zap_server.is_zap_running():
     print("ZAP is up and running!")
 
 # Initialize ZAP API client
-# zap = ZAPv2(apikey=ZAP_API_KEY)
 zap = ZAPv2(apikey=ZAP_API_KEY, proxies={'http': f"{ZAP_HOST}:{ZAP_PORT}", 'https': f"{ZAP_HOST}:{ZAP_PORT}"})
-
 
 # Proxy a request to the target so that ZAP has something to deal with
 print(f'Accessing target {TARGET_URL}')
@@ -63,19 +61,11 @@ print('Passive Scan completed')
 
 # print('Active Scan completed')
 
-# Report the results
-print('Hosts:', ', '.join(zap.core.hosts))
-print('Alerts:')
-
-process_alerts(zap.core.alerts())
-
-# post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n")
-
-# Post the summary as a comment
-
-artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
-post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n<FINAL SUMMARY HERE>\n```\n📂 **[Download Full Report]({artifact_link})**")
-# post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")
-
 # Stop ZAP
 zap_server.stop_zap()
+
+final_summary = process_alerts(zap.core.alerts())
+
+# Post the summary as a PR comment
+artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
+post_pr_comment(f"### Security Scan Summary 🚨\n\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")

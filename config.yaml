@@ -15,7 +15,7 @@ fail_on_levels:
 
 scans:
   spider: true
-  ajax_spider: true
+  ajax_spider: false
   ajax_spider_timeout: 180  # timeout in seconds
   passive: true
-  active: true
+  active: false

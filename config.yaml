@@ -5,3 +5,6 @@ summarize_levels:
 ignore_levels:
   - Informational
   - Low
+
+fail_on_levels:
+  - High

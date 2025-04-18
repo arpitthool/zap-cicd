@@ -86,37 +86,49 @@ def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
     return stats_intro + response.choices[0].message.content
 
 def process_alerts(alerts):
-    """Main entry to filter alerts, summarize them, and generate the final report."""
+    """Main entry to filter alerts, selectively summarize, and generate the final report."""
     alert_summaries = []
     fail_risk_alerts = 0  # Counter for pipeline-failing alerts
+    total_processed_alerts = 0  # To respect ALERT_LIMIT
 
-    # Filter alerts based on configured levels
-    filtered_alerts = [
-        alert for alert in alerts
-        if (risk := alert.get("risk", "").lower()) in summarize_levels and risk not in ignore_levels
-    ]
+    print(f"✅ Starting to process {len(alerts)} alert(s).")
 
-    print(f"✅ Found {len(filtered_alerts)} alert(s) after filtering.")
-
-    for i, alert in enumerate(filtered_alerts[:ALERT_LIMIT]):
+    for alert in alerts:
         risk_level = alert.get("risk", "").lower()
-        print(f"→ Summarizing alert {i+1}/{min(ALERT_LIMIT, len(filtered_alerts))} ({alert.get('risk')}): {alert.get('name')}")
+
+        # Ignore alerts in ignore_levels
+        if risk_level in ignore_levels:
+            continue
+
+        total_processed_alerts += 1
+        if total_processed_alerts > ALERT_LIMIT:
+            break  # Respect alert processing limit
+
+        print(f"→ Processing alert {total_processed_alerts}/{ALERT_LIMIT} ({alert.get('risk')}): {alert.get('name')}")
 
         # Count alerts matching fail_on_levels
         if risk_level in fail_on_levels:
             fail_risk_alerts += 1
 
-        summary = get_summary(alert)
-        alert_summaries.append({"alert": alert, "summary": summary})
+        # Summarize only if risk is in summarize_levels
+        if risk_level in summarize_levels:
+            summary = get_summary(alert)
+        else:
+            summary = "*No summary generated for this alert based on configuration.*"
+
+        alert_summaries.append({
+            "alert": alert,
+            "summary": summary
+        })
 
     if not alert_summaries:
-        print("⚠️ No alerts to summarize based on config.")
-        return "No alerts to summarize based on the configured risk levels."
+        print("⚠️ No alerts to include based on config.")
+        return "No alerts to include based on the configured risk levels."
 
     final_summary = generate_final_summary(
         alert_summaries=alert_summaries,
         all_alerts=alerts,
-        summarized_alerts=[item["alert"] for item in alert_summaries]
+        summarized_alerts=[item["alert"] for item in alert_summaries if not item["summary"].startswith("*No summary")]
     )
 
     # Save results
@@ -130,7 +142,7 @@ def process_alerts(alerts):
 
     print("📄 Security report saved as: security_report.txt")
 
-    # 🚨 Fail the pipeline if fail_risk_alerts found
+    # 🚨 Fail the pipeline if needed
     if fail_risk_alerts > 0:
         print(f"❌ Found {fail_risk_alerts} alert(s) at level(s) [{', '.join(config.get('fail_on_levels', []))}] configured to fail the pipeline.")
         sys.exit(1)

@@ -21,6 +21,7 @@ else:
 scans_config = config.get("scans", {})
 run_spider = scans_config.get("spider", True)
 run_ajax_spider = scans_config.get("ajax_spider", False)
+ajax_spider_timeout = scans_config.get("ajax_spider_timeout", 120)  # default 120 seconds
 run_passive = scans_config.get("passive", True)
 run_active = scans_config.get("active", False)
 
@@ -63,7 +64,7 @@ if run_ajax_spider:
     print(f'⚡ AJAX Spidering target {TARGET_URL}')
     zap.ajaxSpider.scan(TARGET_URL)
 
-    timeout = time.time() + 60 * 2  # 2 minutes timeout
+    timeout = time.time() + ajax_spider_timeout
     while zap.ajaxSpider.status == 'running':
         if time.time() > timeout:
             print('⚠️ AJAX Spider timed out!')

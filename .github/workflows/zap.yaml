@@ -25,6 +25,8 @@ jobs:
 
       - name: Start ZAP server
         run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker pull zaproxy/zap-stable
           docker run -d --name zap --network zapnet \
             -p 8090:8090 \
             zaproxy/zap-stable \

@@ -24,10 +24,18 @@ if os.path.exists(CONFIG_PATH):
 else:
     raise FileNotFoundError("Missing config.yaml file in project directory.")
 
+def normalize_levels(config: dict, key: str) -> set:
+    """Safely load and normalize risk levels from config into a lowercase set."""
+    return set(level.lower() for level in (config.get(key) or []))
+
 # Normalize risk levels from config
-summarize_levels = set(level.lower() for level in config.get("summarize_levels", []))
-ignore_levels = set(level.lower() for level in config.get("ignore_levels", [])) # For ignoring the alert levels
-fail_on_levels = set(level.lower() for level in config.get("fail_on_levels", []))  # For pipeline gating
+summarize_levels = normalize_levels(config, "summarize_levels")
+ignore_levels = normalize_levels(config, "ignore_levels") # For ignoring the alert levels
+fail_on_levels = normalize_levels(config, "fail_on_levels") # For pipeline gating
+
+
+
+
 
 def load_prompt(path: str, default: str) -> str:
     """Load a prompt from a file or fallback to a default string."""

@@ -1,13 +1,17 @@
-name: ZAP Scan (PR)
-run-name: ${{ github.actor }} is performing a DAST scan using ZAP 🚀
+name: ZAP Scan
 
-# Trigger this workflow when a pull request is opened or updated with new commits
+run-name: ${{ github.actor }} is running a ZAP DAST scan 🚀
+
 on:
   pull_request:
     branches:
       - main
-    types: [opened, synchronize]  # opened = new PR; synchronize = push to existing PR
-        
+    types: [opened, synchronize]
+  schedule:
+    # - cron: '0 2 * * 0'  # Every Sunday at 2 AM UTC
+    - cron: '*/5 * * * *'  # Every 5 mins
+  workflow_dispatch:  # Manual trigger
+
 jobs:
   zap_scan:
     runs-on: self-hosted
@@ -65,7 +69,7 @@ jobs:
           ZAP_HOST: http://localhost
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number || '' }}  # If PR exists
 
       - name: Upload Security Report
         uses: actions/upload-artifact@v4

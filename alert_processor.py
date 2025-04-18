@@ -2,10 +2,11 @@ import openai
 import os
 import json
 import yaml
+import sys
 from dotenv import load_dotenv
 from collections import Counter
 
-# Load environment variables (optional if you're using GitHub Actions secrets)
+# Load environment variables
 load_dotenv()
 
 # Initialize OpenAI client
@@ -25,7 +26,8 @@ else:
 
 # Normalize risk levels from config
 summarize_levels = set(level.lower() for level in config.get("summarize_levels", []))
-ignore_levels = set(level.lower() for level in config.get("ignore_levels", []))
+ignore_levels = set(level.lower() for level in config.get("ignore_levels", [])) # For ignoring the alert levels
+fail_on_levels = set(level.lower() for level in config.get("fail_on_levels", []))  # For pipeline gating
 
 def load_prompt(path: str, default: str) -> str:
     """Load a prompt from a file or fallback to a default string."""
@@ -86,6 +88,7 @@ def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
 def process_alerts(alerts):
     """Main entry to filter alerts, summarize them, and generate the final report."""
     alert_summaries = []
+    fail_risk_alerts = 0  # Counter for pipeline-failing alerts
 
     # Filter alerts based on configured levels
     filtered_alerts = [
@@ -94,8 +97,15 @@ def process_alerts(alerts):
     ]
 
     print(f"✅ Found {len(filtered_alerts)} alert(s) after filtering.")
+
     for i, alert in enumerate(filtered_alerts[:ALERT_LIMIT]):
+        risk_level = alert.get("risk", "").lower()
         print(f"→ Summarizing alert {i+1}/{min(ALERT_LIMIT, len(filtered_alerts))} ({alert.get('risk')}): {alert.get('name')}")
+
+        # Count alerts matching fail_on_levels
+        if risk_level in fail_on_levels:
+            fail_risk_alerts += 1
+
         summary = get_summary(alert)
         alert_summaries.append({"alert": alert, "summary": summary})
 
@@ -119,4 +129,12 @@ def process_alerts(alerts):
         f.write(final_summary)
 
     print("📄 Security report saved as: security_report.txt")
+
+    # 🚨 Fail the pipeline if fail_risk_alerts found
+    if fail_risk_alerts > 0:
+        print(f"❌ Found {fail_risk_alerts} alert(s) at level(s) [{', '.join(config.get('fail_on_levels', []))}] configured to fail the pipeline.")
+        sys.exit(1)
+    else:
+        print("✅ No blocking alerts found. Proceeding normally.")
+
     return final_summary

@@ -10,5 +10,5 @@ ignore_levels:
 
 # It defines which risk levels(if NOT ignored) you want to fail the pipeline i.e. if you want to fail the pipeline if a High level
 # level alert is found, then add it here and make sure that ignore_levels does not contain 'High' the level.
+# NOTE: Don't comment out the level you want to pass
 fail_on_levels:
-  # - Low

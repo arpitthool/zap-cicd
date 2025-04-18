@@ -7,4 +7,4 @@ ignore_levels:
   - Low
 
 fail_on_levels:
-  - High
+  - Low

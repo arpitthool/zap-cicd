@@ -9,7 +9,7 @@ on:
     types: [opened, synchronize]
   schedule:
     - cron: "*/5 * * * *"  # Every 5 mins
-  workflow_dispatch:  # Manual trigger
+  # workflow_dispatch:  # Manual trigger
 
 jobs:
   zap_scan:

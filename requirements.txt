@@ -1,0 +1,4 @@
+openai
+dotenv
+zaproxy
+pyyaml

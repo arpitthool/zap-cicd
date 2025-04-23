@@ -1,0 +1,21 @@
+# It defines which risk levels you want to summarize i.e. only the alerts at these levels will be summarized by the LLM model.
+# NOTE: if a level is not included here, it will still be there in the security report, but a summary won't be generated for it.
+summarize_levels:
+  - High
+  - Medium
+
+# It defines which risk levels you want to completely skip i.e. the alerts at these levels won't even be processed. 
+ignore_levels:
+  - Informational
+
+# It defines which risk levels(if NOT ignored) you want to fail the pipeline i.e. if you want to fail the pipeline if a High level
+# level alert is found, then add it here and make sure that ignore_levels does not contain 'High' the level.
+fail_on_levels:
+  # - High
+
+scans:
+  spider: true
+  ajax_spider: false
+  ajax_spider_timeout: 180  # timeout in seconds
+  passive: true
+  active: false

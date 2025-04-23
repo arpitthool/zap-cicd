@@ -1,41 +1,90 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: workflow_dispatch
-jobs:
-  Explore-GitHub-Actions:
-    runs-on: self-hosted
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-      # - name: ZAP Scan
-      #   uses: zaproxy/action-full-scan@v0.12.0
-      #   with:
-      #     target: 'https://www.zaproxy.org/'
+name: ZAP Scan
 
-  # zap_scan:
-  #   runs-on: self-hosted
-  #   name: Scan the webapplication
-  #   steps:
-  #     # - name: Checkout
-  #       # uses: actions/checkout@v4
-  #       # with:
-  #         # ref: master
-  #     - name: ZAP Scan
-  #       # uses: zaproxy/action-full-scan@v0.12.0
-  #       uses: zaproxy/action-baseline@v0.14.0
-  #       with:
-  #         # token: ${{ secrets.GITHUB_TOKEN }}
-  #         docker_name: 'ghcr.io/zaproxy/zaproxy:stable'
-  #         # docker_name: 'ghcr.io/zaproxy/zaproxy:bare'
-  #         target: 'https://www.zaproxy.org/'
-  #         # rules_file_name: '.zap/rules.tsv'
-  #         cmd_options: '-a'
+run-name: ${{ github.actor }} is running a ZAP DAST scan 🚀
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize]
+  schedule:
+    # - cron: '0 2 * * 0'  # Every Sunday at 2 AM UTC
+    - cron: '*/5 * * * *'  # Every 5 mins
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  zap_scan:
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Create Docker network
+        run: docker network create zapnet
+
+      - name: Start web app using docker
+        run: |
+          docker run -d --name my-web-app --network zapnet -p 127.0.0.1:3000:3000 bkimminich/juice-shop
+          echo "Waiting for Juice Shop..."
+          until curl -sSf http://localhost:3000; do sleep 5; done
+
+      - name: Start ZAP server
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker pull zaproxy/zap-stable
+          docker run -d --name zap --network zapnet \
+            -p 8090:8090 \
+            zaproxy/zap-stable \
+            zap.sh -daemon -port 8090 -host 0.0.0.0 \
+              -config api.addrs.addr.name=.* \
+              -config api.addrs.addr.regex=true \
+              -config api.key=${{ secrets.ZAP_API_KEY }}
+
+      - name: Wait for ZAP to start
+        run: |
+          echo "Waiting for ZAP..."
+          until curl -s http://localhost:8090; do sleep 5; done
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Create a place holder report file. Replace this with your actual scan output.
+      - name: Create a sample file
+        run: echo "This is a test file." > security_report.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run ZAP Security Scan
+        run: python3 basic-scan.py
+        env:
+          ZAP_API_KEY: ${{ secrets.ZAP_API_KEY }}
+          ZAP_PORT: 8090
+          TARGET_URL: http://my-web-app:3000
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ZAP_HOST: http://localhost
+          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number || '' }}  # If PR exists
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: security_report.txt
+
+      - name: Terminate web app
+        if: always()
+        run: docker rm -f my-web-app
+
+      - name: Stop ZAP
+        if: always()
+        run: docker rm -f zap
+
+      - name: Remove Docker network
+        if: always()
+        run: docker network rm zapnet

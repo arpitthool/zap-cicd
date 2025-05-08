@@ -8,7 +8,7 @@ on:
       - main
     types: [opened, synchronize]
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 mins
+    - cron: "0 7 * * 0"  # 2 AM on Sunday EST
   workflow_dispatch:  # Manual trigger
 
 jobs:

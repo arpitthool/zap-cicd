@@ -62,6 +62,8 @@ summarize_levels:
   - High
   - Medium
 
+alerts_limit: 5
+
 ignore_levels:
   - Informational
 
@@ -76,9 +78,10 @@ scans:
   active: false
 ```
 
-- ✅ Only `summarize_levels` are processed by the LLM  
-- 🚫 `ignore_levels` are completely skipped  
-- 🔥 `fail_on_levels` will cause the pipeline to fail if triggered
+- Only `summarize_levels` are processed by the LLM  
+- `ignore_levels` are completely skipped  
+- `fail_on_levels` will cause the pipeline to fail if triggered
+- `alerts_limit` defines the total number of alerts that the report will contain
 
 ---
 

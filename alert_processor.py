@@ -13,9 +13,6 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-# Configurable limit on number of alerts to summarize
-ALERT_LIMIT = 5
-
 # Load filtering preferences from YAML config
 CONFIG_PATH = "config.yaml"
 if os.path.exists(CONFIG_PATH):
@@ -23,6 +20,9 @@ if os.path.exists(CONFIG_PATH):
         config = yaml.safe_load(config_file)
 else:
     raise FileNotFoundError("Missing config.yaml file in project directory.")
+
+# Get the max number of alerts to include in the report
+alerts_limit = config.get("alerts_limit", 5)
 
 def normalize_levels(config: dict, key: str) -> set:
     """Safely load and normalize risk levels from config into a lowercase set."""
@@ -32,10 +32,6 @@ def normalize_levels(config: dict, key: str) -> set:
 summarize_levels = normalize_levels(config, "summarize_levels")
 ignore_levels = normalize_levels(config, "ignore_levels") # For ignoring the alert levels
 fail_on_levels = normalize_levels(config, "fail_on_levels") # For pipeline gating
-
-
-
-
 
 def load_prompt(path: str, default: str) -> str:
     """Load a prompt from a file or fallback to a default string."""
@@ -61,7 +57,7 @@ def get_summary(alert):
     )
     return response.choices[0].message.content
 
-def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
+def generate_final_summary(alert_summaries, all_alerts, summarized_alerts, alerts_count):
     """Generate final report from summarized alerts and append ChatGPT's high-level summary."""
     total_alerts = len(all_alerts)
     risk_counts = Counter(alert.get("risk", "Unknown").capitalize() for alert in all_alerts)
@@ -69,10 +65,11 @@ def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
 
     # Contextual summary
     stats_intro = (
-        f"Security scan detected **{total_alerts}** total alerts.\n\n"
+        f"Security scan detected **{total_alerts}** total alerts.\n\n" +
         f"📊 **Risk Level Breakdown:**\n" +
         "".join(f"- {level}: {count}\n" for level, count in risk_counts.items()) + "\n" +
-        f"✅ **Alerts summarized in this report**: {', '.join(summarized_levels) or 'None'}.\n\n"
+        f"✅ **Alerts summarized in this report**: {', '.join(summarized_levels) or 'None'}.\n" +
+        f"🔒 This report includes total **{alerts_count} alert(s)**.\n\n"
     )
 
     summaries_text = "\n\n".join(item["summary"] for item in alert_summaries)
@@ -97,7 +94,7 @@ def process_alerts(alerts):
     """Main entry to filter alerts, selectively summarize, and generate the final report."""
     alert_summaries = []
     fail_risk_alerts = 0  # Counter for pipeline-failing alerts
-    total_processed_alerts = 0  # To respect ALERT_LIMIT
+    total_processed_alerts = 0  # To respect alerts_limit
 
     print(f"✅ Starting to process {len(alerts)} alert(s).")
 
@@ -108,11 +105,12 @@ def process_alerts(alerts):
         if risk_level in ignore_levels:
             continue
 
-        total_processed_alerts += 1
-        if total_processed_alerts > ALERT_LIMIT:
+        if total_processed_alerts == alerts_limit:
             break  # Respect alert processing limit
-
-        print(f"→ Processing alert {total_processed_alerts}/{ALERT_LIMIT} ({alert.get('risk')}): {alert.get('name')}")
+        else:
+            total_processed_alerts += 1
+            
+        print(f"→ Processing alert {total_processed_alerts}/{alerts_limit} ({alert.get('risk')}): {alert.get('name')}")
 
         # Count alerts matching fail_on_levels
         if risk_level in fail_on_levels:
@@ -136,7 +134,8 @@ def process_alerts(alerts):
     final_summary = generate_final_summary(
         alert_summaries=alert_summaries,
         all_alerts=alerts,
-        summarized_alerts=[item["alert"] for item in alert_summaries if not item["summary"].startswith("*No summary")]
+        summarized_alerts=[item["alert"] for item in alert_summaries if not item["summary"].startswith("*No summary")],
+        alerts_count = total_processed_alerts
     )
 
     # Save results

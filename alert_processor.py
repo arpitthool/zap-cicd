@@ -21,7 +21,7 @@ if os.path.exists(CONFIG_PATH):
 else:
     raise FileNotFoundError("Missing config.yaml file in project directory.")
 
-# Get the max number of alerts to summarize
+# Get the max number of alerts to include in the report
 ALERT_LIMIT = config.get("alert_limit", 5)
 
 def normalize_levels(config: dict, key: str) -> set:

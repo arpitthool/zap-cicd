@@ -57,7 +57,7 @@ def get_summary(alert):
     )
     return response.choices[0].message.content
 
-def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
+def generate_final_summary(alert_summaries, all_alerts, summarized_alerts, alerts_count):
     """Generate final report from summarized alerts and append ChatGPT's high-level summary."""
     total_alerts = len(all_alerts)
     risk_counts = Counter(alert.get("risk", "Unknown").capitalize() for alert in all_alerts)
@@ -65,7 +65,8 @@ def generate_final_summary(alert_summaries, all_alerts, summarized_alerts):
 
     # Contextual summary
     stats_intro = (
-        f"Security scan detected **{total_alerts}** total alerts.\n\n"
+        f"Security scan detected **{total_alerts}** total alerts.\n\n" +
+        f"🔒 This report includes total **{alerts_count} alert(s)**.\n"
         f"📊 **Risk Level Breakdown:**\n" +
         "".join(f"- {level}: {count}\n" for level, count in risk_counts.items()) + "\n" +
         f"✅ **Alerts summarized in this report**: {', '.join(summarized_levels) or 'None'}.\n\n"
@@ -132,7 +133,8 @@ def process_alerts(alerts):
     final_summary = generate_final_summary(
         alert_summaries=alert_summaries,
         all_alerts=alerts,
-        summarized_alerts=[item["alert"] for item in alert_summaries if not item["summary"].startswith("*No summary")]
+        summarized_alerts=[item["alert"] for item in alert_summaries if not item["summary"].startswith("*No summary")],
+        alerts_count = total_processed_alerts
     )
 
     # Save results
@@ -153,4 +155,4 @@ def process_alerts(alerts):
     else:
         print("✅ No blocking alerts found. Proceeding normally.")
 
-    return final_summary, alerts_limit
+    return final_summary

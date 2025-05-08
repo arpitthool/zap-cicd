@@ -13,9 +13,6 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-# Configurable limit on number of alerts to summarize
-ALERT_LIMIT = 5
-
 # Load filtering preferences from YAML config
 CONFIG_PATH = "config.yaml"
 if os.path.exists(CONFIG_PATH):
@@ -23,6 +20,9 @@ if os.path.exists(CONFIG_PATH):
         config = yaml.safe_load(config_file)
 else:
     raise FileNotFoundError("Missing config.yaml file in project directory.")
+
+# Get the max number of alerts to summarize
+ALERT_LIMIT = config.get("alert_limit", 5)
 
 def normalize_levels(config: dict, key: str) -> set:
     """Safely load and normalize risk levels from config into a lowercase set."""
@@ -32,10 +32,6 @@ def normalize_levels(config: dict, key: str) -> set:
 summarize_levels = normalize_levels(config, "summarize_levels")
 ignore_levels = normalize_levels(config, "ignore_levels") # For ignoring the alert levels
 fail_on_levels = normalize_levels(config, "fail_on_levels") # For pipeline gating
-
-
-
-
 
 def load_prompt(path: str, default: str) -> str:
     """Load a prompt from a file or fallback to a default string."""

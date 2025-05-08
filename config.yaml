@@ -5,7 +5,7 @@ summarize_levels:
   - Medium
 
 # Configurable limit on maximum number of alerts to summarize
-alert_limit: 3
+alert_limit: 1
 
 # It defines which risk levels you want to completely skip i.e. the alerts at these levels won't even be processed. 
 ignore_levels:

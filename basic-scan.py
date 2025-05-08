@@ -104,9 +104,4 @@ final_summary, alerts_count = process_alerts(zap.core.alerts())
 
 # ✅ Post final summary as PR comment
 artifact_link = f"https://github.com/{GITHUB_REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
-post_pr_comment(f"""### Security Scan Summary 🚨
-                \n\n
-                🔒 This report includes **{alerts_count} alert(s)**.
-                \n
-                ```\n{final_summary}\n```
-                \n📂 **[Download Full Report]({artifact_link})**""")
+post_pr_comment(f"### Security Scan Summary 🚨\n\n🔒 This report includes **{alerts_count} alert(s)**.\n```\n{final_summary}\n```\n📂 **[Download Full Report]({artifact_link})**")

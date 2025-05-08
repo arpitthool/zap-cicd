@@ -22,7 +22,7 @@ else:
     raise FileNotFoundError("Missing config.yaml file in project directory.")
 
 # Get the max number of alerts to include in the report
-ALERT_LIMIT = config.get("alert_limit", 5)
+alerts_limit = config.get("alerts_limit", 5)
 
 def normalize_levels(config: dict, key: str) -> set:
     """Safely load and normalize risk levels from config into a lowercase set."""
@@ -93,7 +93,7 @@ def process_alerts(alerts):
     """Main entry to filter alerts, selectively summarize, and generate the final report."""
     alert_summaries = []
     fail_risk_alerts = 0  # Counter for pipeline-failing alerts
-    total_processed_alerts = 0  # To respect ALERT_LIMIT
+    total_processed_alerts = 0  # To respect alerts_limit
 
     print(f"✅ Starting to process {len(alerts)} alert(s).")
 
@@ -105,10 +105,10 @@ def process_alerts(alerts):
             continue
 
         total_processed_alerts += 1
-        if total_processed_alerts > ALERT_LIMIT:
+        if total_processed_alerts > alerts_limit:
             break  # Respect alert processing limit
 
-        print(f"→ Processing alert {total_processed_alerts}/{ALERT_LIMIT} ({alert.get('risk')}): {alert.get('name')}")
+        print(f"→ Processing alert {total_processed_alerts}/{alerts_limit} ({alert.get('risk')}): {alert.get('name')}")
 
         # Count alerts matching fail_on_levels
         if risk_level in fail_on_levels:
@@ -153,4 +153,4 @@ def process_alerts(alerts):
     else:
         print("✅ No blocking alerts found. Proceeding normally.")
 
-    return final_summary
+    return final_summary, alerts_limit

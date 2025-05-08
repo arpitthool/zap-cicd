@@ -2,7 +2,7 @@
 
 Welcome to the **CI/CD-integrated Security Scanner** — an automated system that:
 
-- 🕷️ Scans your web app using [OWASP ZAP](https://www.zaproxy.org/)
+- 🕷️ Scans your web app using [ZAP](https://www.zaproxy.org/)
 - 🤖 Summarizes security findings using OpenAI's GPT model
 - 💬 Posts those summaries as comments on your GitHub Pull Requests
 - 🚨 Can fail the CI pipeline based on configurable risk levels

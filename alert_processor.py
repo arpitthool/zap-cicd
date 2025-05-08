@@ -105,10 +105,11 @@ def process_alerts(alerts):
         if risk_level in ignore_levels:
             continue
 
-        total_processed_alerts += 1
-        if total_processed_alerts > alerts_limit:
+        if total_processed_alerts == alerts_limit:
             break  # Respect alert processing limit
-
+        else:
+            total_processed_alerts += 1
+            
         print(f"→ Processing alert {total_processed_alerts}/{alerts_limit} ({alert.get('risk')}): {alert.get('name')}")
 
         # Count alerts matching fail_on_levels
